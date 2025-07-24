@@ -2,16 +2,16 @@
 
 This project automates the creation and posting of AI-generated LinkedIn posts using:
 - **n8n** for workflow automation
-- **Groq/OpenAI** for generating content
-- **OpenAI Image API** for visuals
+- **Gemini Chatbot** for generating content
+- **Hugging Face API** for visuals
 - **LinkedIn API** to auto-publish posts
 
 ---
 
 ## 🛠️ Features
 
-- Generate captions using AI Agent (Groq/OpenAI)
-- Generate image via OpenAI DALL·E API
+- Generate captions using AI Agent (Gemini chat model)
+- Generate image via Hugging Face API
 - Combine both (merge node)
 - Post to LinkedIn automatically
 
