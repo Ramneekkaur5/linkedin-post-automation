@@ -1,0 +1,287 @@
+{
+  "name": "Linkedin post creator",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "Post Title",
+        "formDescription": "Test",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Post Title"
+            },
+            {
+              "fieldLabel": "Tone",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Professional"
+                  },
+                  {
+                    "option": "Funny"
+                  },
+                  {
+                    "option": "Motivational"
+                  }
+                ]
+              }
+            },
+            {
+              "fieldLabel": "Target Audience"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "09ff13a0-61c4-4163-9fc1-3678abd8a2ea",
+      "name": "On form submission",
+      "webhookId": "1614ed1b-1365-4769-bae3-3f388ab06370"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Write   a {{ $json.Tone }} content for LinkedIn post for {{ $json['Target Audience'] }} on the topic \"{{ $json['Post Title'] }} of  200 words",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.1,
+      "position": [
+        208,
+        0
+      ],
+      "id": "fdb4cf95-a550-4308-9f8f-485c5e372e4d",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        80,
+        208
+      ],
+      "id": "3c1574ab-a493-41e0-91a6-74468b3b7335",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "qoSvr5e78QZ5ZWji",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "person": "boZ2vLi307",
+        "text": "={{ $json.output }}",
+        "shareMediaCategory": "IMAGE",
+        "additionalFields": {
+          "title": "={{ $('On form submission').item.json['Post Title'] }}",
+          "visibility": "CONNECTIONS"
+        }
+      },
+      "type": "n8n-nodes-base.linkedIn",
+      "typeVersion": 1,
+      "position": [
+        2784,
+        80
+      ],
+      "id": "5fea7742-ef3e-4d58-b6e5-75031130438f",
+      "name": "Create a post",
+      "credentials": {
+        "linkedInOAuth2Api": {
+          "id": "6eaSTGVYbIiRhFuy",
+          "name": "LinkedIn account 4"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        2048,
+        32
+      ],
+      "id": "281d73ea-de39-49df-8651-d9c9e5bb5931",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "jsCode": "return items.map(item => {\n  return {\n    json: {\n      prompt: item.json.image_prompt,\n      size: \"1024x1024\",       // Optional default size\n      style: \"realistic\"        // Optional custom style\n    }\n  };\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1392,
+        256
+      ],
+      "id": "abb84220-1766-46b3-88f8-d6f47b83f7cb",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b3ebd934-a9f5-4c02-98fa-8aa289399edf",
+              "name": "image_prompt",
+              "value": "={{ $('On form submission').item.json['Post Title'] }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        800,
+        192
+      ],
+      "id": "7da08235-9f5c-4c84-8608-2dd80027c4c4",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-xl-base-1.0\n\n",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer \t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"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"inputs\": \"{{ $json.output }}\"\n}\n",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1184,
+        256
+      ],
+      "id": "d7ba91be-e74f-466c-8972-ac5485d96834",
+      "name": "Image Generator"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Create a post",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Image Generator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Image Generator": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "19264ff9-6dfe-4616-9b90-3ff60f9d8689",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "120c7f17948c8f7426d4713e36ce8c109c667d78afc57c043ae8f0f21af71498"
+  },
+  "id": "tOc09dIE9C4E5qX9",
+  "tags": []
+}
